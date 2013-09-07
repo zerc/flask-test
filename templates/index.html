@@ -1,0 +1,44 @@
+<html>
+<head>
+  <title>Flask-test :: Main page</title>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+</head>
+<body>
+  {% macro field(fname) %}
+    {{ form[fname].label }}:<br>
+    {{ form[fname] }} {{ form[fname].errors or '' }}<br>
+  {% endmacro %}
+
+  {% for message in get_flashed_messages() %}
+    {{ message }}
+  {% endfor %}
+
+  <form method="POST" action="{{ url_for('index') }}">
+    {{ form.csrf_token }}
+    {{ field('name') }}
+    {{ field('password') }}
+    <input type="submit" value="Register">
+  </form>
+
+  <button id="users">Show users</button>
+  <div id="users_container"></div>
+
+  <script type="text/javascript">
+  (function ($){
+    var b = $('#users'),
+        container = $('#users_container'),
+        url = '{{ url_for("users") }}';
+
+    b.click(function (){
+      container.html('');
+      $.ajax({url: url, dataType: 'json'}).done(function (users) {        
+        $.each(users, function (i, user) {
+          container.append(user.pk + '. ' + user.name + '<br>');
+        })
+      });
+      return false;
+    });
+  }(jQuery));
+  </script>
+</body>
+</html>
