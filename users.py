@@ -48,8 +48,8 @@ def users_as_json(f):
 
         if request.is_xhr:
             return json.dumps(ctx, default=user_to_json)
-        else:
-            return json.dumps({'message': 'Not ajax'}), 403
+
+        return json.dumps({'message': 'Not ajax'}), 403
 
     return wrapper
 
