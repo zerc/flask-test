@@ -38,10 +38,7 @@ def user_to_json(user):
     if not isinstance(user, User):
         raise TypeError
 
-    return {
-        'name': user.name,
-        'pk': user.pk
-    }
+    return {f: getattr(user, f) for f in ('name', 'pk')}
 
 
 def users_as_json(f):
