@@ -11,6 +11,7 @@ from werkzeug.utils import cached_property
 class CustomRequest(Request):
     """
     We like are hard ways :D
+    !!! Do not repeat this !!!
     """
     @cached_property
     def form(self):
