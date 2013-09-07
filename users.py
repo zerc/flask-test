@@ -1,4 +1,5 @@
 # coding: utf-8
+import hashlib
 from functools import wraps
 import simplejson as json
 
@@ -69,15 +70,35 @@ def render_as_html(template=None):
     return decorator
 
 
+def prepare_user_form_data(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        data = request.form.copy()
+
+        try:
+            pswd = data['password']
+            if pswd:
+                data['password'] = hashlib.sha256(pswd).hexdigest()
+        except KeyError:
+            pass
+
+        request.form = data
+
+        return f()
+    return decorated_function
+
+
 # Views
 @app.route('/', methods=('POST', 'GET'))
 @render_as_html()
+@prepare_user_form_data
 def index():
     form = RegisterUserForm()
     if form.validate_on_submit():
-        user = User(**form.data)
-        db.session.add(user)
-        db.session.commit()
+        print form.data
+        # user = User(**form.data)
+        # db.session.add(user)
+        # db.session.commit()
         flash('You registered!')
         form = RegisterUserForm(None)
 

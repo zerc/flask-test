@@ -8,29 +8,11 @@ from werkzeug.datastructures import ImmutableMultiDict
 from werkzeug.utils import cached_property
 
 
-class CustomRequest(Request):
-    """
-    We like are hard ways :D
-    !!! Do not repeat this !!!
-    """
-    @cached_property
-    def form(self):
-        data = dict(super(Request, self).form)
-        try:
-            pswd = data['password'].pop()
-            if pswd:
-                data['password'] = hashlib.sha256(pswd).hexdigest()
-        except KeyError:
-            pass
-        return ImmutableMultiDict(data)
-
-
 DIRNAME = os.path.dirname(__name__)
 
 sqlite_db_path = os.path.join(DIRNAME, 'flask-test.db')
 
 app = Flask(__name__)
-app.request_class = CustomRequest
 
 app.config.update({
     'DEBUG': True,
