@@ -3,12 +3,13 @@ import hashlib
 from functools import wraps
 import simplejson as json
 
-from flask import render_template, request, url_for, flash
+from flask import render_template, request, url_for, flash, redirect
 from flask.ext.wtf import Form
 from wtforms import TextField
 from wtforms.validators import DataRequired
 from wtforms.ext.sqlalchemy.orm import model_form
 from werkzeug.wrappers import BaseResponse
+from sqlalchemy.exc import IntegrityError
 
 from project import app, db
 
@@ -73,34 +74,47 @@ def render_as_html(template=None):
 def prepare_user_form_data(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        data = request.form.copy()
-
-        try:
-            pswd = data['password']
+        if request.method == 'POST':
+            data = request.form.copy()
+            pswd = data.get('password')
             if pswd:
                 data['password'] = hashlib.sha256(pswd).hexdigest()
-        except KeyError:
-            pass
 
-        request.form = data
-
+            request.form = data
         return f()
     return decorated_function
 
 
+def user_save_exception_handler(f):
+    @wraps(f)
+    def wrapper():
+        safe_page = url_for('index')
+
+        try:
+            return f()
+        except IntegrityError, e:
+            flash('Invalid username :p')
+            return redirect(safe_page)
+    return wrapper
+
+
 # Views
 @app.route('/', methods=('POST', 'GET'))
+@user_save_exception_handler
 @render_as_html()
 @prepare_user_form_data
 def index():
     form = RegisterUserForm()
     if form.validate_on_submit():
-        print form.data
-        # user = User(**form.data)
-        # db.session.add(user)
-        # db.session.commit()
+        user = User(**form.data)
+        db.session.add(user)
+        db.session.commit()
         flash('You registered!')
         form = RegisterUserForm(None)
+
+    if form.errors:
+        # reset password for secury :)
+        form.password.data = ''
 
     return {'form': form}
 
